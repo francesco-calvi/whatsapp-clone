@@ -11,19 +11,20 @@ import { useStateValue } from "../state/StateProvider";
 import { actionTypes } from "../state/reducer";
 
 function Sidebar() {
-  const [chats, setChats] = useState([]);
+  //const [chats, setChats] = useState([]);
   const [state, dispatch] = useStateValue();
 
   useEffect(() => {
     db.collection("users/" + state.dbUserId + "/contacts").onSnapshot(
       (snapshot) => {
-        setChats(
-          snapshot.docs.map((doc) => ({
+        dispatch({
+          type: actionTypes.SET_CHATS,
+          chats: snapshot.docs.map((doc) => ({
             id: doc.id,
             name: doc.data().name,
             profileURL: doc.data().profileURL,
-          }))
-        );
+          })),
+        });
       }
     );
   }, [state.dbUserId]);
@@ -63,7 +64,7 @@ function Sidebar() {
       </div>
       <div className="sidebar__chats">
         <SidebarChat addNewChat />
-        {chats.map((chat) => {
+        {state.chats.map((chat) => {
           return (
             <SidebarChat
               key={chat.id}

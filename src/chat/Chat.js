@@ -13,9 +13,10 @@ import { useStateValue } from "../state/StateProvider";
 
 function Chat() {
   const [inputValue, setInputValue] = useState("");
-  const { contactName, chatId } = useParams();
+  const { chatId } = useParams();
   const [messages, setMessages] = useState([]);
   const [state] = useStateValue();
+  const [chatInfo, setChatInfo] = useState([]);
 
   useEffect(() => {
     if (chatId) {
@@ -33,6 +34,8 @@ function Chat() {
             }))
           );
         });
+
+      setChatInfo(state.chats.find((c) => c.id === chatId));
     }
   }, [chatId]);
 
@@ -59,9 +62,9 @@ function Chat() {
   return (
     <div className="chat">
       <div className="chat__header">
-        <Avatar />
+        <Avatar src={chatInfo.profileURL} />
         <div className="chat__headerInfo">
-          <h3>{contactName}</h3>
+          <h3>{chatInfo.name}</h3>
           <p>Last seen at ...</p>
         </div>
         <div className="chat__headerRight">
