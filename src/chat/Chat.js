@@ -8,50 +8,51 @@ import InsertEmoticonIcon from "@mui/icons-material/InsertEmoticon";
 import MicIcon from "@mui/icons-material/Mic";
 import { useParams } from "react-router-dom";
 import db from "../firebase";
+import firebase from "firebase/compat/app";
 import { useStateValue } from "../state/StateProvider";
 
 function Chat() {
   const [inputValue, setInputValue] = useState("");
-  const { chatId } = useParams();
+  const { contactName, chatId } = useParams();
   const [messages, setMessages] = useState([]);
   const [state] = useStateValue();
 
   useEffect(() => {
     if (chatId) {
-      console.log(chatId);
-      // db.collection("chats")
-      //   .doc(chatId)
-      //   .collection("messages")
-      //   .orderBy("timestamp", "asc")
-      //   .onSnapshot((snapshot) =>
-      //     setMessages(
-      //       snapshot.docs.map((doc) => ({
-      //         data: doc.data(),
-      //       }))
-      //     )
-      //   );
-
-      // /users/qL9RwwDxMgSVZoeM3sbB/contacts/I8vIQ0Lw94V8Gt45fxYR/messages
       db.collection(
         "/users/" + state.dbUserId + "/contacts/" + chatId + "/messages/"
       )
         .orderBy("timestamp", "asc")
         .onSnapshot((snapshot) => {
-          console.log(snapshot.docs[0].data());
           setMessages(
             snapshot.docs.map((doc) => ({
+              id: doc.id,
               message: doc.data().message,
               timestamp: doc.data().timestamp,
+              sender: doc.data().sender,
             }))
           );
         });
-      console.log(messages);
     }
   }, [chatId]);
 
+  const splitName = () => {
+    const splitted = state.user.displayName.split(" ");
+    return splitted[0];
+  };
+
   const sendMessage = (e) => {
     e.preventDefault();
-    console.log(inputValue);
+    const sender = splitName();
+
+    db.collection(
+      "/users/" + state.dbUserId + "/contacts/" + chatId + "/messages/"
+    ).add({
+      message: inputValue,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      sender: sender,
+    });
+
     setInputValue("");
   };
 
@@ -60,7 +61,7 @@ function Chat() {
       <div className="chat__header">
         <Avatar />
         <div className="chat__headerInfo">
-          <h3>Room name</h3>
+          <h3>{contactName}</h3>
           <p>Last seen at ...</p>
         </div>
         <div className="chat__headerRight">
@@ -78,8 +79,13 @@ function Chat() {
       <div className="chat__body">
         {messages.map((message) => {
           return (
-            <p className={`chat__message ${true && "chat__receiver"}`}>
-              <span className="chat__name"></span>
+            <p
+              className={`chat__message ${
+                message.sender === splitName(state.user.displayName) &&
+                "chat__receiver"
+              }`}
+              key={message.id}
+            >
               {message.message}
               <span className="chat__timestamp">
                 {new Date(message.timestamp?.toDate()).toUTCString()}
