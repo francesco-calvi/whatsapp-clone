@@ -4,18 +4,12 @@ import "./SidebarChat.css";
 import { Link } from "react-router-dom";
 
 function SidebarChat({ addNewChat, name, id, profileURL }) {
-  const [seed, setSeed] = useState("");
-
-  useEffect(() => {
-    setSeed(Math.floor(Math.random() * 5000));
-  }, []);
-
   const createChat = () => {};
 
   // https://lh3.googleusercontent.com/a-/AOh14GgqI1tekc3PuRRjlynE8Nbw7oEYOJdSdB_CBHML=s96-c
   // https://avatars.dicebear.com/api/human/${seed}.svg
   return !addNewChat ? (
-    <Link to={`/chats/${name}/${id}`}>
+    <Link to={`/chats/${id}`}>
       <div className="sidebarChat">
         <Avatar src={profileURL} />
         <div className="sidebarChat__info">
