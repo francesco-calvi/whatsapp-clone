@@ -15,47 +15,20 @@ function Sidebar() {
   const [state, dispatch] = useStateValue();
 
   useEffect(() => {
-    // const unsubscribe = db.collection('users')
-    // //.doc(userId)
-    // .onSnapshot(snapshot =>
-    //   setChats(snapshot.docs.map((doc) => ({
-    //     id: doc.id,
-    //     data: doc.data()
-    //   }))
-    //   )
-    // )
-
-    console.log(state.user.email);
-
-    // db.collection("users")
-    //   .where("email", "==", state.user.email)
-    //   .onSnapshot((snapshot) => {
-    //     dispatch({
-    //       type: actionTypes.SET_DB_UID,
-    //       dbUserId: snapshot.docs[0].id,
-    //     });
-    //   })
-
     db.collection("users/" + state.dbUserId + "/contacts").onSnapshot(
       (snapshot) => {
-        snapshot.docs.forEach((doc) => {
-          console.log(doc.data());
-        });
         setChats(
           snapshot.docs.map((doc) => ({
             id: doc.id,
             name: doc.data().name,
+            profileURL: doc.data().profileURL,
           }))
         );
       }
     );
-    console.log(chats);
-    // I8vIQ0Lw94V8Gt45fxYR
   }, [state.dbUserId]);
 
   useEffect(() => {
-    console.log(state.user.email);
-
     db.collection("users")
       .where("email", "==", state.user.email)
       .onSnapshot((snapshot) => {
@@ -69,7 +42,7 @@ function Sidebar() {
   return (
     <div className="sidebar">
       <div className="sidebar__header">
-        <Avatar />
+        <Avatar src={state.user?.photoURL} />
         <div className="sidebar__headerRight">
           <IconButton>
             <DonutLargeIcon />
@@ -91,7 +64,14 @@ function Sidebar() {
       <div className="sidebar__chats">
         <SidebarChat addNewChat />
         {chats.map((chat) => {
-          return <SidebarChat key={chat.id} name={chat.name} id={chat.id} />;
+          return (
+            <SidebarChat
+              key={chat.id}
+              name={chat.name}
+              id={chat.id}
+              profileURL={chat.profileURL}
+            />
+          );
         })}
       </div>
     </div>
