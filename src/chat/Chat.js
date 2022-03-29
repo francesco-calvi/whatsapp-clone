@@ -62,9 +62,9 @@ function Chat() {
   return (
     <div className="chat">
       <div className="chat__header">
-        <Avatar src={chatInfo.profileURL} />
+        <Avatar src={chatInfo?.profileURL} />
         <div className="chat__headerInfo">
-          <h3>{chatInfo.name}</h3>
+          <h3>{chatInfo?.name}</h3>
           <p>Last seen at ...</p>
         </div>
         <div className="chat__headerRight">
