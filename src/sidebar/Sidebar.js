@@ -9,10 +9,22 @@ import SidebarChat from "../sidebar-chat/SidebarChat";
 import db from "../firebase";
 import { useStateValue } from "../state/StateProvider";
 import { actionTypes } from "../state/reducer";
+import NewChatForm from "../new-chat-form/NewChatForm";
 
 function Sidebar() {
-  //const [chats, setChats] = useState([]);
+  const [showForm, setShowForm] = useState(false);
   const [state, dispatch] = useStateValue();
+
+  useEffect(() => {
+    db.collection("users")
+      .where("email", "==", state.user.email)
+      .onSnapshot((snapshot) => {
+        dispatch({
+          type: actionTypes.SET_DB_UID,
+          dbUserId: snapshot.docs[0].id,
+        });
+      });
+  }, []);
 
   useEffect(() => {
     db.collection("users/" + state.dbUserId + "/contacts").onSnapshot(
@@ -29,16 +41,35 @@ function Sidebar() {
     );
   }, [state.dbUserId]);
 
-  useEffect(() => {
-    db.collection("users")
-      .where("email", "==", state.user.email)
-      .onSnapshot((snapshot) => {
-        dispatch({
-          type: actionTypes.SET_DB_UID,
-          dbUserId: snapshot.docs[0].id,
-        });
-      });
-  }, []);
+  const randomSeed = () => {
+    return Math.floor(Math.random() * 5000);
+  };
+
+  const avatarURL = () => {
+    return `https://avatars.dicebear.com/api/human/${randomSeed()}.svg`;
+  };
+
+  const createChat = (input) => {
+    input.profileURL = avatarURL();
+    console.log("creo chat...");
+    console.log(input);
+    db.collection("/users/" + state.dbUserId + "/contacts/").add({
+      email: input.email,
+      name: input.name,
+      profileURL: input.profileURL,
+    });
+    setShowForm(false);
+  };
+
+  const getInputData = (input) => {
+    createChat(input);
+  };
+
+  const closeForm = (toClose) => {
+    if (toClose) {
+      setShowForm(false);
+    }
+  };
 
   return (
     <div className="sidebar">
@@ -48,7 +79,7 @@ function Sidebar() {
           <IconButton>
             <DonutLargeIcon />
           </IconButton>
-          <IconButton>
+          <IconButton onClick={() => setShowForm(true)}>
             <ChatIcon />
           </IconButton>
           <IconButton>
@@ -63,7 +94,13 @@ function Sidebar() {
         </div>
       </div>
       <div className="sidebar__chats">
-        <SidebarChat addNewChat />
+        {showForm && (
+          <NewChatForm
+            sendInputData={getInputData}
+            showForm={showForm}
+            closeForm={closeForm}
+          />
+        )}
         {state.chats.map((chat) => {
           return (
             <SidebarChat
