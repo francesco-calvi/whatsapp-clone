@@ -1,6 +1,6 @@
 .newChat__form {
   z-index: 1;
-  position: absolute;
+  position: sticky;
   background: white;
   top: 0;
   right: 0;
