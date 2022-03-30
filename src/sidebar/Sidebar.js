@@ -14,19 +14,25 @@ import NewChatForm from "../new-chat-form/NewChatForm";
 function Sidebar() {
   const [showForm, setShowForm] = useState(false);
   const [state, dispatch] = useStateValue();
+  const [newUserId, setNewUserId] = useState();
 
   useEffect(() => {
+    // set current user id
     db.collection("users")
       .where("email", "==", state.user.email)
       .onSnapshot((snapshot) => {
-        dispatch({
-          type: actionTypes.SET_DB_UID,
-          dbUserId: snapshot.docs[0].id,
-        });
+        let userId = snapshot.docs[0].id;
+        if (userId) {
+          dispatch({
+            type: actionTypes.SET_DB_UID,
+            dbUserId: userId,
+          });
+        }
       });
   }, []);
 
   useEffect(() => {
+    // set current user chats
     db.collection("users/" + state.dbUserId + "/contacts").onSnapshot(
       (snapshot) => {
         dispatch({
@@ -53,11 +59,74 @@ function Sidebar() {
     input.profileURL = avatarURL();
     console.log("creo chat...");
     console.log(input);
-    db.collection("/users/" + state.dbUserId + "/contacts/").add({
-      email: input.email,
-      name: input.name,
-      profileURL: input.profileURL,
-    });
+
+    // create the other user
+    db.collection("users")
+      .where("email", "==", input.email)
+      .onSnapshot((snapshot) => {
+        if (snapshot.docs.length > 0) {
+          // controllo se viene usato il setNewUserId
+          console.log("user alredy present");
+          setNewUserId(snapshot.docs[0].id);
+          let docId = snapshot.docs[0].id;
+          // check if new user is in current user contacts
+          db.collection("/users/" + state.dbUserId + "/contacts/")
+            .where("id", "==", docId)
+            .onSnapshot((snapshot) => {
+              if (snapshot.docs.length === 0) {
+                // add new user to current user contacts
+                console.log("add new user to current user contacts");
+                db.collection("/users/" + state.dbUserId + "/contacts/").add({
+                  id: docId,
+                  email: input.email,
+                  name: input.name,
+                  profileURL: input.profileURL,
+                });
+              }
+            });
+          // check if current user is in new user contacts
+          db.collection("/users/" + docId + "/contacts/")
+            .where("id", "==", state.dbUserId)
+            .onSnapshot((snapshot) => {
+              if (snapshot.docs.length === 0) {
+                // add current user to new user contacts
+                console.log(" add current user to new user contacts");
+                db.collection("/users/" + docId + "/contacts/").add({
+                  id: state.dbUserId,
+                  email: state.user.email,
+                  name: state.user.displayName,
+                  profileURL: input.profileURL,
+                });
+              }
+            });
+        } else {
+          // add new user
+          console.log("create user");
+          db.collection("users")
+            .add({
+              email: input.email,
+              name: input.name,
+            })
+            .then((doc) => {
+              // add new user to current user contacts
+              db.collection("/users/" + state.dbUserId + "/contacts/").add({
+                id: doc.id,
+                email: input.email,
+                name: input.name,
+                profileURL: input.profileURL,
+              });
+
+              // add current user to new user contacts
+              db.collection("/users/" + doc.id + "/contacts/").add({
+                id: state.dbUserId,
+                email: state.user.email,
+                name: state.user.displayName,
+                profileURL: input.profileURL,
+              });
+            });
+        }
+      });
+
     setShowForm(false);
   };
 
