@@ -48,6 +48,7 @@ function Chat() {
     e.preventDefault();
     const sender = splitName();
 
+    // create message in current user chat
     db.collection(
       "/users/" + state.dbUserId + "/contacts/" + chatId + "/messages/"
     ).add({
@@ -55,6 +56,25 @@ function Chat() {
       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
       sender: sender,
     });
+
+    // create message in contact chat
+    db.collection("/users/" + state.dbUserId + "/contacts/")
+      .doc(chatId)
+      .onSnapshot((snapshot) => {
+        let contactId = snapshot.data().id;
+        db.collection("/users/" + contactId + "/contacts/")
+          .where("id", "==", state.dbUserId)
+          .onSnapshot((snapshot) => {
+            let docId = snapshot.docs[0].id;
+            db.collection(
+              "/users/" + contactId + "/contacts/" + docId + "/messages/"
+            ).add({
+              message: inputValue,
+              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+              sender: sender,
+            });
+          });
+      });
 
     setInputValue("");
   };
