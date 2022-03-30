@@ -17,8 +17,7 @@ function Sidebar() {
 
   useEffect(() => {
     // set current user id
-    let unsubscribe = db
-      .collection("users")
+    db.collection("users")
       .where("email", "==", state.user.email)
       .onSnapshot((snapshot) => {
         let userId = snapshot.docs[0].id;
@@ -29,14 +28,12 @@ function Sidebar() {
           });
         }
       });
-    unsubscribe();
   }, []);
 
   useEffect(() => {
     // set current user chats
-    let unsubscribe = db
-      .collection("users/" + state.dbUserId + "/contacts")
-      .onSnapshot((snapshot) => {
+    db.collection("users/" + state.dbUserId + "/contacts").onSnapshot(
+      (snapshot) => {
         dispatch({
           type: actionTypes.SET_CHATS,
           chats: snapshot.docs.map((doc) => ({
@@ -45,8 +42,8 @@ function Sidebar() {
             profileURL: doc.data().profileURL,
           })),
         });
-      });
-    unsubscribe();
+      }
+    );
   }, [state.dbUserId]);
 
   const randomSeed = () => {
@@ -157,7 +154,7 @@ function Sidebar() {
       <div className="sidebar__search">
         <div className="sidebar__searchContainer">
           <SearchIcon />
-          <input type="text" placeholder="Search or start new chat" />
+          <input type="text" placeholder="Search" />
         </div>
       </div>
       <div className="sidebar__chats">

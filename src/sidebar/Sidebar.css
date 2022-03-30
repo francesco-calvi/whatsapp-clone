@@ -7,8 +7,10 @@
 .sidebar__header {
   display: flex;
   justify-content: space-between;
-  padding: 23px;
+  padding: 22px;
   border-right: 2px solid lightgray;
+  box-sizing: border-box;
+  height: 80px;
 }
 
 .sidebar__headerRight {

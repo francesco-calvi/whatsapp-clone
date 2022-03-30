@@ -19,6 +19,7 @@ function App() {
             <Sidebar />
             <Routes>
               <Route path="/chats/:chatId" element={<Chat />} />
+              <Route path="/" element={<Chat />} />
             </Routes>
           </Router>
         </div>
