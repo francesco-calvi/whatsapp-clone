@@ -6,15 +6,14 @@ import { useStateValue } from "../state/StateProvider.js";
 import db from "../firebase";
 
 function SidebarChat({ name, id, profileURL }) {
-  const [messages, setMessages] = useState("");
+  const [messages, setMessages] = useState([]);
   const [state] = useStateValue();
 
   useEffect(() => {
     if (id) {
-      let unsubscribe = db
-        .collection(
-          "/users/" + state.dbUserId + "/contacts/" + id + "/messages/"
-        )
+      db.collection(
+        "/users/" + state.dbUserId + "/contacts/" + id + "/messages/"
+      )
         .orderBy("timestamp", "desc")
         .onSnapshot((snapshot) => {
           setMessages(
@@ -26,7 +25,6 @@ function SidebarChat({ name, id, profileURL }) {
             }))
           );
         });
-      unsubscribe();
     }
   }, [state.dbUserId, id]);
 

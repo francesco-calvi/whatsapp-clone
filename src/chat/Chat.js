@@ -17,6 +17,7 @@ function Chat() {
   const [messages, setMessages] = useState([]);
   const [state] = useStateValue();
   const [chatInfo, setChatInfo] = useState([]);
+  const [lastSeenMessage, setLastSeenMessage] = useState("");
 
   useEffect(() => {
     if (chatId) {
@@ -38,6 +39,36 @@ function Chat() {
       setChatInfo(state.chats.find((c) => c.id === chatId));
     }
   }, [chatId]);
+
+  useEffect(() => {
+    const messageDate = new Date(messages[0]?.timestamp.toDate());
+
+    const today = new Date();
+    const difference = Math.trunc(
+      (today.getTime() - messageDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    let daysDiff;
+    if (difference === 0) {
+      daysDiff = "today";
+    } else if (difference === 1) {
+      daysDiff = "yesterday";
+    } else {
+      daysDiff = difference + " days ago";
+    }
+
+    const message =
+      "Last seen " +
+      daysDiff +
+      ", " +
+      messageDate.getHours() +
+      ":" +
+      (messageDate.getMinutes().toString().length === 1
+        ? "0" + messageDate.getMinutes()
+        : messageDate.getMinutes());
+
+    setLastSeenMessage(message);
+  }, [messages]);
 
   const splitName = () => {
     const splitted = state.user.displayName.split(" ");
@@ -85,7 +116,7 @@ function Chat() {
         <Avatar src={chatInfo?.profileURL} />
         <div className="chat__headerInfo">
           <h3>{chatInfo?.name}</h3>
-          <p>Last seen at ...</p>
+          <p>{lastSeenMessage}</p>
         </div>
         <div className="chat__headerRight">
           <IconButton>
@@ -110,9 +141,7 @@ function Chat() {
               key={message.id}
             >
               {message.message}
-              <span className="chat__timestamp">
-                {new Date(message.timestamp?.toDate()).toUTCString()}
-              </span>
+              <span className="chat__timestamp">{}</span>
             </p>
           );
         })}
