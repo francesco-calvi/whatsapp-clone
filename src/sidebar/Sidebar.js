@@ -17,18 +17,47 @@ function Sidebar() {
 
   useEffect(() => {
     // set current user id
-    db.collection("users")
-      .where("email", "==", state.user.email)
-      .onSnapshot((snapshot) => {
-        let userId = snapshot.docs[0].id;
-        if (userId) {
-          dispatch({
-            type: actionTypes.SET_DB_UID,
-            dbUserId: userId,
-          });
-        }
+    if (state.user) {
+      // check if exists
+      db.collection("users")
+        .where("email", "==", state.user.email)
+        .onSnapshot((snapshot) => {
+          if (snapshot.docs.length > 0) {
+            updateUid(snapshot.docs[0].id);
+          } else {
+            db.collection("users")
+              .add({
+                email: state.user.email,
+                name: state.user.displayName,
+              })
+              .then((doc) => {
+                updateUid(doc.id);
+              });
+          }
+        });
+    }
+
+    const updateUid = (value) => {
+      dispatch({
+        type: actionTypes.SET_DB_UID,
+        dbUserId: value,
       });
-  }, []);
+    };
+
+    // vecchio
+
+    // db.collection("users")
+    //   .where("email", "==", state.user.email)
+    //   .onSnapshot((snapshot) => {
+    //     let userId = snapshot.docs[0].id;
+    //     if (userId) {
+    //       dispatch({
+    //         type: actionTypes.SET_DB_UID,
+    //         dbUserId: userId,
+    //       });
+    //     }
+    //   });
+  }, [state.user, dispatch]);
 
   useEffect(() => {
     // set current user chats
@@ -44,7 +73,7 @@ function Sidebar() {
         });
       }
     );
-  }, [state.dbUserId]);
+  }, [state.dbUserId, dispatch]);
 
   const randomSeed = () => {
     return Math.floor(Math.random() * 5000);
@@ -63,11 +92,10 @@ function Sidebar() {
         if (snapshot.docs.length > 0) {
           let docId = snapshot.docs[0].id;
           // check if new user is in current user contacts
-          const unsubscribeAddNewUser = db
-            .collection("/users/" + state.dbUserId + "/contacts/")
+          db.collection("/users/" + state.dbUserId + "/contacts/")
             .doc(docId)
             .onSnapshot((snapshot) => {
-              if (!snapshot.id) {
+              if (!snapshot.exists) {
                 // add new user to current user contacts
                 db.collection("/users/" + state.dbUserId + "/contacts/").add({
                   id: docId,
@@ -77,11 +105,9 @@ function Sidebar() {
                 });
               }
             });
-          unsubscribeAddNewUser();
 
           // check if current user is in new user contacts
-          const unsubscribeAddCurrentUser = db
-            .collection("/users/" + docId + "/contacts/")
+          db.collection("/users/" + docId + "/contacts/")
             .where("id", "==", state.dbUserId)
             .onSnapshot((snapshot) => {
               if (snapshot.docs.length === 0) {
@@ -94,7 +120,6 @@ function Sidebar() {
                 });
               }
             });
-          unsubscribeAddCurrentUser();
         } else {
           // add new user
           db.collection("users")

@@ -1,15 +1,14 @@
-import React, { useEffect } from "react";
+import React from "react";
 import "./Login.css";
 import { actionTypes } from "../state/reducer";
 import { auth, provider } from "../firebase";
-import db from "../firebase";
 import { useStateValue } from "../state/StateProvider";
 import { Button } from "@mui/material";
 
 function Login() {
   const [state, dispatch] = useStateValue();
 
-  const updateUser = (authData) => {
+  const updateState = (authData) => {
     dispatch({
       type: actionTypes.SET_USER,
       user: authData.user,
@@ -20,23 +19,10 @@ function Login() {
     auth
       .signInWithPopup(provider)
       .then((result) => {
-        updateUser(result);
+        updateState(result);
       })
       .catch((error) => console.error(error.message));
   };
-
-  useEffect(() => {
-    if (state.user) {
-      db.collection("users")
-        .where("email", "==", state.user.email)
-        .onSnapshot((snapshot) => {
-          dispatch({
-            type: actionTypes.SET_DB_UID,
-            dbUserId: snapshot.docs[0].id,
-          });
-        });
-    }
-  }, [state.user]);
 
   return (
     <div className="login">
