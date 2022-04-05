@@ -41,34 +41,49 @@ function Chat() {
   }, [chatId]);
 
   useEffect(() => {
-    const messageDate = new Date(messages[0]?.timestamp.toDate());
+    const createLastSeenMessage = (timestamp) => {
+      const messageDate = new Date(timestamp.toDate());
+      const today = new Date();
+      const difference = Math.trunc(
+        (today.getTime() - messageDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
 
-    const today = new Date();
-    const difference = Math.trunc(
-      (today.getTime() - messageDate.getTime()) / (1000 * 60 * 60 * 24)
-    );
+      let daysDiff;
+      if (difference === 0) {
+        daysDiff = "today";
+      } else if (difference === 1) {
+        daysDiff = "yesterday";
+      } else {
+        daysDiff = difference + " days ago";
+      }
 
-    let daysDiff;
-    if (difference === 0) {
-      daysDiff = "today";
-    } else if (difference === 1) {
-      daysDiff = "yesterday";
-    } else {
-      daysDiff = difference + " days ago";
-    }
+      return (
+        "Last seen " +
+        daysDiff +
+        ", " +
+        messageDate.getHours() +
+        ":" +
+        (messageDate.getMinutes().toString().length === 1
+          ? "0" + messageDate.getMinutes()
+          : messageDate.getMinutes())
+      );
+    };
 
-    const message =
-      "Last seen " +
-      daysDiff +
-      ", " +
-      messageDate.getHours() +
-      ":" +
-      (messageDate.getMinutes().toString().length === 1
-        ? "0" + messageDate.getMinutes()
-        : messageDate.getMinutes());
+    const findLastMsg = () => {
+      const contactMessages = messages.filter((msg) =>
+        chatInfo?.name.toLowerCase().includes(msg.sender.toLowerCase())
+      );
+      if (contactMessages.length > 0) {
+        setLastSeenMessage(
+          createLastSeenMessage(
+            contactMessages[contactMessages.length - 1].timestamp
+          )
+        );
+      }
+    };
 
-    setLastSeenMessage(message);
-  }, [messages]);
+    findLastMsg();
+  }, [messages, chatInfo.name]);
 
   const splitName = () => {
     const splitted = state.user.displayName.split(" ");
@@ -116,7 +131,7 @@ function Chat() {
         <Avatar src={chatInfo?.profileURL} />
         <div className="chat__headerInfo">
           <h3>{chatInfo?.name}</h3>
-          <p>{lastSeenMessage}</p>
+          <p>{`${lastSeenMessage ? lastSeenMessage : ""}`}</p>
         </div>
         <div className="chat__headerRight">
           <IconButton>
