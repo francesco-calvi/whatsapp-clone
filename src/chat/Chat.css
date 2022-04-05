@@ -35,22 +35,22 @@
   background-repeat: repeat;
   background-position: center;
   padding: 30px;
-  overflow-y: scroll;
+  overflow-y: auto;
   scroll-behavior: smooth;
   scrollbar-width: none;
 }
 
-.chat__body:hover::-webkit-scrollbar {
-  background: #ccc;
-  border-radius: 20px;
+.chat__body::-webkit-scrollbar {
+  background: none;  
   width: 8px;
 }
 
-.chat__body::-webkit-scrollbar {
-  background: transparent;
+.chat__body::-webkit-scrollbar-thumb {
+  border-radius: 20px;
+  background: #ccc; 
 }
 
-::-webkit-scrollbar-track:horizontal {
+.chat__body::-webkit-scrollbar-track:horizontal {
   display: none;
 }
 
@@ -80,8 +80,10 @@
 }
 
 .chat__timestamp {
-  margin-left: 10px;
   font-size: xx-small;
+  display: block;
+  color: gray;
+  margin-bottom: 2px;
 }
 
 .chat__receiver {

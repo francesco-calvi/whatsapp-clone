@@ -55,6 +55,7 @@ function Sidebar() {
             id: doc.id,
             name: doc.data().name,
             profileURL: doc.data().profileURL,
+            email: doc.data().email,
           })),
         });
       }

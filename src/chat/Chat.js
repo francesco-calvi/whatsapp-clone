@@ -38,15 +38,21 @@ function Chat() {
 
       setChatInfo(state.chats.find((c) => c.id === chatId));
     }
-  }, [chatId]);
+  }, [chatId, state.chats, state.dbUserId]);
+
+  const getDaysBetween = (messageDate) => {
+    const today = new Date();
+    const difference = Math.trunc(
+      (today.getTime() - messageDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    return difference;
+  };
 
   useEffect(() => {
     const createLastSeenMessage = (timestamp) => {
       const messageDate = new Date(timestamp.toDate());
-      const today = new Date();
-      const difference = Math.trunc(
-        (today.getTime() - messageDate.getTime()) / (1000 * 60 * 60 * 24)
-      );
+      let difference = getDaysBetween(messageDate);
 
       let daysDiff;
       if (difference === 0) {
@@ -57,21 +63,12 @@ function Chat() {
         daysDiff = difference + " days ago";
       }
 
-      return (
-        "Last seen " +
-        daysDiff +
-        ", " +
-        messageDate.getHours() +
-        ":" +
-        (messageDate.getMinutes().toString().length === 1
-          ? "0" + messageDate.getMinutes()
-          : messageDate.getMinutes())
-      );
+      return "Last seen " + daysDiff + ", " + dateTimeFormatter(messageDate);
     };
 
     const findLastMsg = () => {
       const contactMessages = messages.filter((msg) =>
-        chatInfo?.name.toLowerCase().includes(msg.sender.toLowerCase())
+        chatInfo?.email.toLowerCase().includes(msg.sender.toLowerCase())
       );
       if (contactMessages.length > 0) {
         setLastSeenMessage(
@@ -82,17 +79,22 @@ function Chat() {
       }
     };
 
+    setLastSeenMessage("");
     findLastMsg();
-  }, [messages, chatInfo.name]);
+  }, [messages, chatInfo.email]);
 
-  const splitName = () => {
-    const splitted = state.user.displayName.split(" ");
-    return splitted[0];
+  const dateTimeFormatter = (date) => {
+    return (
+      date.getHours() +
+      ":" +
+      (date.getMinutes().toString().length === 1
+        ? "0" + date.getMinutes()
+        : date.getMinutes())
+    );
   };
 
   const sendMessage = (e) => {
     e.preventDefault();
-    const sender = splitName();
 
     // create message in current user chat
     db.collection(
@@ -100,7 +102,7 @@ function Chat() {
     ).add({
       message: inputValue,
       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      sender: sender,
+      sender: state.user.email,
     });
 
     // create message in contact chat
@@ -117,12 +119,23 @@ function Chat() {
             ).add({
               message: inputValue,
               timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-              sender: sender,
+              sender: state.user.email,
             });
           });
       });
 
     setInputValue("");
+  };
+
+  const getMessageDateTime = (message) => {
+    const date = new Date(message.timestamp.toDate());
+    const difference = getDaysBetween(date);
+
+    if (difference === 0) {
+      return dateTimeFormatter(date);
+    } else {
+      return date.toLocaleDateString() + " " + dateTimeFormatter(date);
+    }
   };
 
   return (
@@ -148,16 +161,19 @@ function Chat() {
       <div className="chat__body">
         {messages.map((message) => {
           return (
-            <p
-              className={`chat__message ${
-                message.sender === splitName(state.user.displayName) &&
-                "chat__receiver"
-              }`}
-              key={message.id}
-            >
-              {message.message}
-              <span className="chat__timestamp">{}</span>
-            </p>
+            message.timestamp && (
+              <p
+                className={`chat__message ${
+                  message.sender === state.user.email && "chat__receiver"
+                }`}
+                key={message.id}
+              >
+                <span className="chat__timestamp">
+                  {getMessageDateTime(message)}
+                </span>
+                {message.message}
+              </p>
+            )
           );
         })}
       </div>
