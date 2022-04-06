@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import "./Sidebar.css";
 import { Avatar, IconButton } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
@@ -12,7 +12,6 @@ import { actionTypes } from "../state/reducer";
 import NewChatForm from "../new-chat-form/NewChatForm";
 
 function Sidebar() {
-  const [showForm, setShowForm] = useState(false);
   const [state, dispatch] = useStateValue();
 
   useEffect(() => {
@@ -49,15 +48,28 @@ function Sidebar() {
     // set current user chats
     db.collection("users/" + state.dbUserId + "/contacts").onSnapshot(
       (snapshot) => {
-        dispatch({
-          type: actionTypes.SET_CHATS,
-          chats: snapshot.docs.map((doc) => ({
-            id: doc.id,
-            name: doc.data().name,
-            profileURL: doc.data().profileURL,
-            email: doc.data().email,
-          })),
-        });
+        if (snapshot.docs.length > 0) {
+          dispatch({
+            type: actionTypes.SET_CHATS,
+            chats: snapshot.docs.map((doc) => ({
+              id: doc.id,
+              name: doc.data().name,
+              profileURL: doc.data().profileURL,
+              email: doc.data().email,
+            })),
+          });
+        }
+        // else {
+        //   dispatch({
+        //     type: actionTypes.SET_CHATS,
+        //     chats: [],
+        //   });
+        // }
+        // dispatch({
+        //   type: actionTypes.SET_SHOW_START_NEWCHAT_BUTTON,
+        //   showStartNewChatButton: snapshot.docs.length === 0,
+        // });
+        //unsubscribe();
       }
     );
   }, [state.dbUserId, dispatch]);
@@ -143,7 +155,10 @@ function Sidebar() {
 
   const createChat = (input) => {
     checkOrAddNewUser(input);
-    setShowForm(false);
+    dispatch({
+      type: actionTypes.SET_SHOW_NEWCHAT_FORM,
+      showNewChatForm: false,
+    });
   };
 
   const getInputData = (input) => {
@@ -152,8 +167,18 @@ function Sidebar() {
 
   const closeForm = (toClose) => {
     if (toClose) {
-      setShowForm(false);
+      dispatch({
+        type: actionTypes.SET_SHOW_NEWCHAT_FORM,
+        showNewChatForm: false,
+      });
     }
+  };
+
+  const openForm = () => {
+    dispatch({
+      type: actionTypes.SET_SHOW_NEWCHAT_FORM,
+      showNewChatForm: true,
+    });
   };
 
   return (
@@ -164,7 +189,7 @@ function Sidebar() {
           <IconButton>
             <DonutLargeIcon />
           </IconButton>
-          <IconButton onClick={() => setShowForm(true)}>
+          <IconButton onClick={() => openForm()}>
             <ChatIcon />
           </IconButton>
           <IconButton>
@@ -179,23 +204,24 @@ function Sidebar() {
         </div>
       </div>
       <div className="sidebar__chats">
-        {showForm && (
+        {state.showNewChatForm && (
           <NewChatForm
             sendInputData={getInputData}
-            showForm={showForm}
+            showForm={state.showNewChatForm}
             closeForm={closeForm}
           />
         )}
-        {state.chats.map((chat) => {
-          return (
-            <SidebarChat
-              key={chat.id}
-              name={chat.name}
-              id={chat.id}
-              profileURL={chat.profileURL}
-            />
-          );
-        })}
+        {state.chats &&
+          state.chats.map((chat) => {
+            return (
+              <SidebarChat
+                key={chat.id}
+                name={chat.name}
+                id={chat.id}
+                profileURL={chat.profileURL}
+              />
+            );
+          })}
       </div>
     </div>
   );

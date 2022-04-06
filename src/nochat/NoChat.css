@@ -1,0 +1,12 @@
+.container {
+  flex: 0.65;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.startChat__button {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+}

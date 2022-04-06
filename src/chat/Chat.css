@@ -8,7 +8,7 @@
   padding: 22px;
   display: flex;
   align-items: center;
-  border-bottom: 2px solid lightgray;
+  border-left: 1px solid lightgray;
   box-sizing: border-box;
   height: 80px;
 }

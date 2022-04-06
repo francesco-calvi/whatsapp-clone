@@ -137,7 +137,7 @@ function Chat() {
       return date.toLocaleDateString() + " " + dateTimeFormatter(date);
     }
   };
-
+  // togliere caccole chat wrapper
   return (
     <div className="chat">
       <div className="chat__header">
