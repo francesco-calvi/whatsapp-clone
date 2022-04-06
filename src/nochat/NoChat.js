@@ -9,11 +9,11 @@ function NoChat() {
   const [showButton, setShowButton] = useState(false);
 
   useEffect(() => {
-    if (state.chats && state.chats.length === 0) {
+    if (state.chats?.length === 0) {
       setShowButton(true);
+    } else {
+      setShowButton(false);
     }
-
-    console.log(showButton);
   }, [state.chats, showButton]);
 
   const openForm = () => {
