@@ -11,7 +11,7 @@ function App() {
   const [state] = useStateValue();
   return (
     <div className="app">
-      {!state.user ? (
+      {!(state.user && state.dbUserId && state.chats) ? (
         <Login />
       ) : (
         <div className="app__body">

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import "./Sidebar.css";
 import { Avatar, IconButton } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
@@ -13,66 +13,6 @@ import NewChatForm from "../new-chat-form/NewChatForm";
 
 function Sidebar() {
   const [state, dispatch] = useStateValue();
-
-  useEffect(() => {
-    // set current user id
-    if (state.user) {
-      // check if exists
-      db.collection("users")
-        .where("email", "==", state.user.email)
-        .onSnapshot((snapshot) => {
-          if (snapshot.docs.length > 0) {
-            updateUid(snapshot.docs[0].id);
-          } else {
-            db.collection("users")
-              .add({
-                email: state.user.email,
-                name: state.user.displayName,
-              })
-              .then((doc) => {
-                updateUid(doc.id);
-              });
-          }
-        });
-    }
-
-    const updateUid = (value) => {
-      dispatch({
-        type: actionTypes.SET_DB_UID,
-        dbUserId: value,
-      });
-    };
-  }, [state.user, dispatch]);
-
-  useEffect(() => {
-    // set current user chats
-    db.collection("users/" + state.dbUserId + "/contacts").onSnapshot(
-      (snapshot) => {
-        if (snapshot.docs.length > 0) {
-          dispatch({
-            type: actionTypes.SET_CHATS,
-            chats: snapshot.docs.map((doc) => ({
-              id: doc.id,
-              name: doc.data().name,
-              profileURL: doc.data().profileURL,
-              email: doc.data().email,
-            })),
-          });
-        }
-        // else {
-        //   dispatch({
-        //     type: actionTypes.SET_CHATS,
-        //     chats: [],
-        //   });
-        // }
-        // dispatch({
-        //   type: actionTypes.SET_SHOW_START_NEWCHAT_BUTTON,
-        //   showStartNewChatButton: snapshot.docs.length === 0,
-        // });
-        //unsubscribe();
-      }
-    );
-  }, [state.dbUserId, dispatch]);
 
   const randomSeed = () => {
     return Math.floor(Math.random() * 5000);
@@ -155,6 +95,7 @@ function Sidebar() {
 
   const createChat = (input) => {
     checkOrAddNewUser(input);
+
     dispatch({
       type: actionTypes.SET_SHOW_NEWCHAT_FORM,
       showNewChatForm: false,
