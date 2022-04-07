@@ -7,8 +7,10 @@
 .sidebar__header {
   display: flex;
   justify-content: space-between;
-  padding: 23px;
-  border-right: 2px solid lightgray;
+  padding: 22px;
+  border-right: 1px solid lightgray;
+  box-sizing: border-box;
+  height: 80px;
 }
 
 .sidebar__headerRight {
@@ -40,7 +42,7 @@
   border-radius: 20px;
 }
 
-.sidebar__searchContainer > input {
+input.searchChatInput {
   border: none;
   margin-left: 10px;
   outline: none;

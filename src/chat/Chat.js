@@ -17,6 +17,7 @@ function Chat() {
   const [messages, setMessages] = useState([]);
   const [state] = useStateValue();
   const [chatInfo, setChatInfo] = useState([]);
+  const [lastSeenMessage, setLastSeenMessage] = useState("");
 
   useEffect(() => {
     if (chatId) {
@@ -37,35 +38,113 @@ function Chat() {
 
       setChatInfo(state.chats.find((c) => c.id === chatId));
     }
-  }, [chatId]);
+  }, [chatId, state.chats, state.dbUserId]);
 
-  const splitName = () => {
-    const splitted = state.user.displayName.split(" ");
-    return splitted[0];
+  const getDaysBetween = (messageDate) => {
+    const today = new Date();
+    const difference = Math.trunc(
+      (today.getTime() - messageDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    return difference;
+  };
+
+  useEffect(() => {
+    const createLastSeenMessage = (timestamp) => {
+      const messageDate = new Date(timestamp.toDate());
+      let difference = getDaysBetween(messageDate);
+
+      let daysDiff;
+      if (difference === 0) {
+        daysDiff = "today";
+      } else if (difference === 1) {
+        daysDiff = "yesterday";
+      } else {
+        daysDiff = difference + " days ago";
+      }
+
+      return "Last seen " + daysDiff + ", " + dateTimeFormatter(messageDate);
+    };
+
+    const findLastMsg = () => {
+      const contactMessages = messages.filter((msg) =>
+        chatInfo?.email.toLowerCase().includes(msg.sender.toLowerCase())
+      );
+      if (contactMessages.length > 0) {
+        setLastSeenMessage(
+          createLastSeenMessage(
+            contactMessages[contactMessages.length - 1].timestamp
+          )
+        );
+      }
+    };
+
+    setLastSeenMessage("");
+    findLastMsg();
+  }, [messages, chatInfo.email]);
+
+  const dateTimeFormatter = (date) => {
+    return (
+      date.getHours() +
+      ":" +
+      (date.getMinutes().toString().length === 1
+        ? "0" + date.getMinutes()
+        : date.getMinutes())
+    );
   };
 
   const sendMessage = (e) => {
     e.preventDefault();
-    const sender = splitName();
 
+    // create message in current user chat
     db.collection(
       "/users/" + state.dbUserId + "/contacts/" + chatId + "/messages/"
     ).add({
       message: inputValue,
       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      sender: sender,
+      sender: state.user.email,
     });
+
+    // create message in contact chat
+    db.collection("/users/" + state.dbUserId + "/contacts/")
+      .doc(chatId)
+      .onSnapshot((snapshot) => {
+        let contactId = snapshot.data().id;
+        db.collection("/users/" + contactId + "/contacts/")
+          .where("id", "==", state.dbUserId)
+          .onSnapshot((snapshot) => {
+            let docId = snapshot.docs[0].id;
+            db.collection(
+              "/users/" + contactId + "/contacts/" + docId + "/messages/"
+            ).add({
+              message: inputValue,
+              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+              sender: state.user.email,
+            });
+          });
+      });
 
     setInputValue("");
   };
 
+  const getMessageDateTime = (message) => {
+    const date = new Date(message.timestamp.toDate());
+    const difference = getDaysBetween(date);
+
+    if (difference === 0) {
+      return dateTimeFormatter(date);
+    } else {
+      return date.toLocaleDateString() + " " + dateTimeFormatter(date);
+    }
+  };
+  // togliere caccole chat wrapper
   return (
     <div className="chat">
       <div className="chat__header">
         <Avatar src={chatInfo?.profileURL} />
         <div className="chat__headerInfo">
           <h3>{chatInfo?.name}</h3>
-          <p>Last seen at ...</p>
+          <p>{`${lastSeenMessage ? lastSeenMessage : ""}`}</p>
         </div>
         <div className="chat__headerRight">
           <IconButton>
@@ -82,18 +161,19 @@ function Chat() {
       <div className="chat__body">
         {messages.map((message) => {
           return (
-            <p
-              className={`chat__message ${
-                message.sender === splitName(state.user.displayName) &&
-                "chat__receiver"
-              }`}
-              key={message.id}
-            >
-              {message.message}
-              <span className="chat__timestamp">
-                {new Date(message.timestamp?.toDate()).toUTCString()}
-              </span>
-            </p>
+            message.timestamp && (
+              <p
+                className={`chat__message ${
+                  message.sender === state.user.email && "chat__receiver"
+                }`}
+                key={message.id}
+              >
+                <span className="chat__timestamp">
+                  {getMessageDateTime(message)}
+                </span>
+                {message.message}
+              </p>
+            )
           );
         })}
       </div>

@@ -5,10 +5,12 @@
 }
 
 .chat__header {
-  padding: 20px;
+  padding: 22px;
   display: flex;
   align-items: center;
-  border-bottom: 2px solid lightgray;
+  border-left: 1px solid lightgray;
+  box-sizing: border-box;
+  height: 80px;
 }
 
 .chat__headerInfo {
@@ -33,7 +35,31 @@
   background-repeat: repeat;
   background-position: center;
   padding: 30px;
-  overflow: scroll;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+
+.chat__body::-webkit-scrollbar {
+  background: none;  
+  width: 8px;
+}
+
+.chat__body::-webkit-scrollbar-thumb {
+  border-radius: 20px;
+  background: #ccc; 
+}
+
+.chat__body::-webkit-scrollbar-track:horizontal {
+  display: none;
+}
+
+.chat__body::-webkit-scrollbar-track {
+  display: none;
+}
+
+.chat__body::-webkit-scrollbar-button {
+  display: none;
 }
 
 .chat__message {
@@ -54,8 +80,10 @@
 }
 
 .chat__timestamp {
-  margin-left: 10px;
   font-size: xx-small;
+  display: block;
+  color: gray;
+  margin-bottom: 2px;
 }
 
 .chat__receiver {
