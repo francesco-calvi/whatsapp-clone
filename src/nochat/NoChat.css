@@ -9,4 +9,5 @@
 .startChat__button {
   background-color: var(--primary-color) !important;
   color: white !important;
+  padding: 15px !important;
 }

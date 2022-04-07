@@ -42,7 +42,7 @@
   border-radius: 20px;
 }
 
-.sidebar__searchContainer > input {
+input.searchChatInput {
   border: none;
   margin-left: 10px;
   outline: none;

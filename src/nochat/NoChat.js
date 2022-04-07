@@ -3,6 +3,8 @@ import { Button } from "@mui/material";
 import "./NoChat.css";
 import { useStateValue } from "../state/StateProvider";
 import { actionTypes } from "../state/reducer";
+import ChatIcon from "@mui/icons-material/Chat";
+import { IconButton } from "@mui/material";
 
 function NoChat() {
   const [state, dispatch] = useStateValue();
@@ -26,9 +28,9 @@ function NoChat() {
   return (
     <div className="container">
       {showButton && (
-        <Button className="startChat__button" onClick={openForm}>
-          Start chat
-        </Button>
+        <IconButton className="startChat__button" onClick={openForm}>
+          <ChatIcon />
+        </IconButton>
       )}
     </div>
   );

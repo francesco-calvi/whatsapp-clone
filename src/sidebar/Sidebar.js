@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "./Sidebar.css";
 import { Avatar, IconButton } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
@@ -13,6 +13,11 @@ import NewChatForm from "../new-chat-form/NewChatForm";
 
 function Sidebar() {
   const [state, dispatch] = useStateValue();
+  const [chats, setChats] = useState([]);
+
+  useEffect(() => {
+    setChats(state.chats);
+  }, [state.chats]);
 
   const randomSeed = () => {
     return Math.floor(Math.random() * 5000);
@@ -122,6 +127,13 @@ function Sidebar() {
     });
   };
 
+  const searchChat = (e) => {
+    const filtered = state.chats.filter((c) => {
+      return c.name.includes(e.target.value);
+    });
+    setChats(filtered);
+  };
+
   return (
     <div className="sidebar">
       <div className="sidebar__header">
@@ -141,7 +153,12 @@ function Sidebar() {
       <div className="sidebar__search">
         <div className="sidebar__searchContainer">
           <SearchIcon />
-          <input type="text" placeholder="Search" />
+          <input
+            type="text"
+            placeholder="Search"
+            className="searchChatInput"
+            onChange={searchChat}
+          />
         </div>
       </div>
       <div className="sidebar__chats">
@@ -153,7 +170,7 @@ function Sidebar() {
           />
         )}
         {state.chats &&
-          state.chats.map((chat) => {
+          chats.map((chat) => {
             return (
               <SidebarChat
                 key={chat.id}
