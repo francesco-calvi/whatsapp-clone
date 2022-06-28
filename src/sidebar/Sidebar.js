@@ -66,15 +66,11 @@ function Sidebar() {
   };
 
   const addNewUser = async (input) => {
-    return db
-      .collection("users")
-      .add({
-        email: input.email,
-        name: input.name,
-      })
-      .then((doc) => {
-        return doc.id;
-      });
+    const doc = await db.collection("users").add({
+      email: input.email,
+      name: input.name,
+    });
+    return doc.id;
   };
 
   const checkOrAddNewUser = (input) => {

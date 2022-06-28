@@ -9,26 +9,13 @@ import db from "../firebase";
 function Login() {
   const [state, dispatch] = useStateValue();
 
-  const updateState = (authData) => {
-    dispatch({
-      type: actionTypes.SET_USER,
-      user: authData.user,
-    });
-  };
-
-  const signIn = () => {
-    auth
-      .signInWithPopup(provider)
-      .then((result) => {
-        updateState(result);
-      })
-      .catch((error) => console.error(error.message));
-  };
-
   useEffect(() => {
-    // set current user id
+    /* 
+      check user credentials:
+      1. if exists: set current user id in state
+      2. else: add new user
+    */
     if (state.user) {
-      // check if exists
       db.collection("users")
         .where("email", "==", state.user.email)
         .onSnapshot((snapshot) => {
@@ -46,17 +33,10 @@ function Login() {
           }
         });
     }
-
-    const updateUid = (value) => {
-      dispatch({
-        type: actionTypes.SET_DB_UID,
-        dbUserId: value,
-      });
-    };
   }, [state.user, dispatch]);
 
   useEffect(() => {
-    // set current user chats
+    // get user's chats
     if (state.user && state.dbUserId) {
       db.collection("users/" + state.dbUserId + "/contacts").onSnapshot(
         (snapshot) => {
@@ -73,6 +53,29 @@ function Login() {
       );
     }
   }, [state.user, state.dbUserId, dispatch]);
+
+  const updateUid = (value) => {
+    dispatch({
+      type: actionTypes.SET_DB_UID,
+      dbUserId: value,
+    });
+  };
+
+  const updateState = (authData) => {
+    dispatch({
+      type: actionTypes.SET_USER,
+      user: authData.user,
+    });
+  };
+
+  const signIn = () => {
+    auth
+      .signInWithPopup(provider)
+      .then((result) => {
+        updateState(result);
+      })
+      .catch((error) => console.error(error.message));
+  };
 
   return (
     <div className="login">

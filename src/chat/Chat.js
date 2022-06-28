@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "./Chat.css";
 import { Avatar, IconButton } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -20,6 +20,7 @@ function Chat() {
   const [lastSeenMessage, setLastSeenMessage] = useState("");
 
   useEffect(() => {
+    // get all messages
     if (chatId) {
       db.collection(
         "/users/" + state.dbUserId + "/contacts/" + chatId + "/messages/"
@@ -40,6 +41,7 @@ function Chat() {
     }
   }, [chatId, state.chats, state.dbUserId]);
 
+  // calculate days between two dates
   const getDaysBetween = (messageDate) => {
     const today = new Date();
     const difference = Math.trunc(
@@ -49,39 +51,38 @@ function Chat() {
     return difference;
   };
 
+  const createLastSeenMessage = useCallback((timestamp) => {
+    const messageDate = new Date(timestamp.toDate());
+    let difference = getDaysBetween(messageDate);
+
+    let daysDiff;
+    if (difference === 0) {
+      daysDiff = "today";
+    } else if (difference === 1) {
+      daysDiff = "yesterday";
+    } else {
+      daysDiff = difference + " days ago";
+    }
+
+    return "Last seen " + daysDiff + ", " + dateTimeFormatter(messageDate);
+  }, []);
+
   useEffect(() => {
-    const createLastSeenMessage = (timestamp) => {
-      const messageDate = new Date(timestamp.toDate());
-      let difference = getDaysBetween(messageDate);
-
-      let daysDiff;
-      if (difference === 0) {
-        daysDiff = "today";
-      } else if (difference === 1) {
-        daysDiff = "yesterday";
-      } else {
-        daysDiff = difference + " days ago";
-      }
-
-      return "Last seen " + daysDiff + ", " + dateTimeFormatter(messageDate);
-    };
-
-    const findLastMsg = () => {
-      const contactMessages = messages.filter((msg) =>
-        chatInfo?.email.toLowerCase().includes(msg.sender.toLowerCase())
-      );
-      if (contactMessages.length > 0) {
-        setLastSeenMessage(
-          createLastSeenMessage(
-            contactMessages[contactMessages.length - 1].timestamp
-          )
-        );
-      }
-    };
-
     setLastSeenMessage("");
-    findLastMsg();
-  }, [messages, chatInfo.email]);
+
+    // messages of the other person
+    const contactMessages = messages.filter((msg) =>
+      chatInfo?.email.toLowerCase().includes(msg.sender.toLowerCase())
+    );
+
+    if (contactMessages.length > 0) {
+      setLastSeenMessage(
+        createLastSeenMessage(
+          contactMessages[contactMessages.length - 1].timestamp
+        )
+      );
+    }
+  }, [messages, chatInfo?.email, createLastSeenMessage]);
 
   const dateTimeFormatter = (date) => {
     return (
@@ -96,7 +97,7 @@ function Chat() {
   const sendMessage = (e) => {
     e.preventDefault();
 
-    // create message in current user chat
+    // create message in user chat
     db.collection(
       "/users/" + state.dbUserId + "/contacts/" + chatId + "/messages/"
     ).add({
@@ -137,7 +138,7 @@ function Chat() {
       return date.toLocaleDateString() + " " + dateTimeFormatter(date);
     }
   };
-  // togliere caccole chat wrapper
+
   return (
     <div className="chat">
       <div className="chat__header">
